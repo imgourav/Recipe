@@ -1,4 +1,5 @@
 from django.shortcuts import render,redirect
+from django.http import HttpResponse
 from .models import *
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
@@ -26,12 +27,33 @@ def recipes(request):
 
   return render(request, "recipes.html", context)
 
+def update_recipe(request, id):
+  querySet = Recipes.objects.get(id = id)
+  
+  if request.method == "POST":
+    data = request.POST
+    recipe_name = data.get('recipe_name')
+    recipe_description = data.get('recipe_description')
+    recipe_image = request.FILES.get('recipe_image')
+
+    querySet.recipe_name = recipe_name
+    querySet.recipe_description = recipe_description
+
+    if recipe_image:
+      querySet.recipe_image = recipe_image
+
+    querySet.save()
+    return redirect('/recipes/')
+  
+  context = {'recipes' : querySet}
+  return render(request, "update_recipe.html", context)
 
 def delete_recipe(request, id):
   querySet = Recipes.objects.get(id = id)
   querySet.delete()
   return redirect('/recipes/')
 
+# @logout_required(login_url='/logout/')
 def login_page(request):
   if request.method == 'POST':
     username = request.POST.get('username')
